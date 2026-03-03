@@ -10,7 +10,7 @@ Data is synthetic and AI-generated for portfolio purposes. The analytical approa
 
 ## The Problem
 
-Clinic operations teams need visibility into where revenue is coming from , which clinics, which physicians, and which billing codes drive the most activity. Without that, it's hard to spot risks or understand what would happen if billing patterns changed.
+Clinic operations teams need visibility into where revenue is coming from, which clinics, which physicians, and which billing codes drive the most activity. Without that, it's hard to spot risks or understand what would happen if billing patterns changed.
 
 
 
@@ -33,3 +33,7 @@ Clinic operations teams need visibility into where revenue is coming from , whic
 https://public.tableau.com/app/profile/ana.vaz7019/viz/MSK_Injection/Dashboard1?publish=yes
 
 <img width="2374" height="1360" alt="Dashboard 1 (5)" src="https://github.com/user-attachments/assets/b1faa5a2-e63b-4fcb-97c0-17decae69622" />
+
+## Tools: 
+
+SQL (PostgreSQL) · Tableau
