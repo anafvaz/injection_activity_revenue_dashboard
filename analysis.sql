@@ -1,65 +1,90 @@
-select * 
-from msk_injection mi 
-limit 100;
+-- ============================================
+-- 1. DATA VALIDATION
+-- ============================================
 
-select clinic, count(distinct clinic)
-from msk_injection mi
-group by clinic;
+-- Row count and null check across all key fields
+SELECT
+  COUNT(*) AS total_rows,
+  COUNT(*) - COUNT(NULLIF(TRIM(clinic), '')) AS missing_clinic,
+  COUNT(*) - COUNT(NULLIF(TRIM(physician), '')) AS missing_physician,
+  COUNT(*) - COUNT(NULLIF(TRIM(appointment_id), '')) AS missing_appointment_id,
+  COUNT(*) - COUNT(revenue) AS missing_revenue,
+  COUNT(*) - COUNT(appointment_date) AS missing_appointment_date
+FROM msk_injection;
 
-select clinic, count(distinct physician)
-from msk_injection mi
-group by clinic;
+-- Confirm clinic and physician counts
+SELECT
+  clinic,
+  COUNT(DISTINCT physician) AS physician_count
+FROM msk_injection
+GROUP BY clinic;
 
-select
-  count(*) AS total_rows,
-  count(*) - count(nullif(trim(clinic), '')) AS missing_clinic,
-  count(*) - count(nullif(trim(physician), '')) AS missing_physician,
-  count(*) - count(nullif(trim(appointment_id), '')) AS missing_appointment_id,
-  count(*) - count(revenue) AS missing_revenue,
-  count(*) - count(appointment_date) AS missing_appointment_date
-from msk_injection;
+-- Confirm date range
+SELECT
+  MIN(appointment_date) AS earliest_date,
+  MAX(appointment_date) AS latest_date
+FROM msk_injection;
 
-alter table msk_injection 
-alter column appointment_date type date using appointment_date::date;
 
-select min(appointment_date), max(appointment_date)
-from msk_injection;
+-- ============================================
+-- 2. DATA CLEANING
+-- ============================================
 
-alter table msk_injection
-add column is_last_12_months boolean;
+ALTER TABLE msk_injection
+ALTER COLUMN appointment_date TYPE DATE USING appointment_date::DATE;
 
-update msk_injection
-set is_last_12_months =
-  (appointment_date > CURRENT_DATE - interval '12 months'
-   and appointment_date <  CURRENT_DATE);
 
-select * 
-from msk_injection mi 
-limit 100;
+-- ============================================
+-- 3. ANALYSIS
+-- ============================================
 
-select 
-	clinic,
-	sum(revenue) as total_revenue
-from msk_injection
-where is_last_12_months is true
-group by clinic 
-order by total_revenue asc;
+-- Revenue by clinic (last 12 months)
+SELECT
+  clinic,
+  COUNT(*) AS total_injections,
+  SUM(revenue) AS total_revenue,
+  ROUND(AVG(revenue)::NUMERIC, 2) AS avg_revenue_per_injection
+FROM msk_injection
+WHERE appointment_date > CURRENT_DATE - INTERVAL '12 months'
+  AND appointment_date < CURRENT_DATE
+GROUP BY clinic
+ORDER BY total_revenue DESC;
 
-select 
-	physician,
-	sum(revenue) as total_revenue_by_physician
-from msk_injection
-where is_last_12_months is true
-group by physician 
-order by total_revenue_by_physician asc;
+-- Revenue by physician (last 12 months)
+-- Sorted descending to surface concentration risk
+SELECT
+  physician,
+  clinic,
+  COUNT(*) AS total_injections,
+  SUM(revenue) AS total_revenue
+FROM msk_injection
+WHERE appointment_date > CURRENT_DATE - INTERVAL '12 months'
+  AND appointment_date < CURRENT_DATE
+GROUP BY physician, clinic
+ORDER BY total_revenue DESC;
 
-select 
-	clinic,
-	code,
-	to_char(date_trunc('month', appointment_date), 'YYYY-MM') AS month,
-	count(*) as injections, 
-	sum(revenue)
-from msk_injection mi 
-where is_last_12_months is true
-group by clinic, code, month
-order by clinic, code, month;
+-- Monthly revenue trend by clinic and billing code (last 12 months)
+-- Used to identify seasonal patterns and code mix shifts over time
+SELECT
+  clinic,
+  code,
+  TO_CHAR(DATE_TRUNC('month', appointment_date), 'YYYY-MM') AS month,
+  COUNT(*) AS total_injections,
+  SUM(revenue) AS total_revenue
+FROM msk_injection
+WHERE appointment_date > CURRENT_DATE - INTERVAL '12 months'
+  AND appointment_date < CURRENT_DATE
+GROUP BY clinic, code, month
+ORDER BY clinic, code, month;
+
+-- Billing code mix summary (last 12 months)
+SELECT
+  code,
+  COUNT(*) AS total_injections,
+  SUM(revenue) AS total_revenue,
+  ROUND(COUNT(*)::NUMERIC / SUM(COUNT(*)) OVER () * 100, 1) AS pct_of_total_injections
+FROM msk_injection
+WHERE appointment_date > CURRENT_DATE - INTERVAL '12 months'
+  AND appointment_date < CURRENT_DATE
+GROUP BY code
+ORDER BY total_injections DESC;
