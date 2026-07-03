@@ -17,15 +17,15 @@ Clinic operations teams need visibility into where revenue is coming from, which
 ## Key Findings
 
 - **$3.3M total revenue** across 10,851 injections, averaging $305 per injection
-- **Coastal Clinic generates 58% of revenue** vs **42% for Ridgeview**, a concentration worth monitoring
+- **Coastal Clinic generates 58% of revenue** vs **42% for Ridgeview**, a single-site dependency
 - **Top two physicians account for a disproportionate share of revenue**,  a dependency risk if activity changed
 - **MSK01 is the dominant billing code** at 41%, followed by MSK02 (35%) and MSK03 (24%)
 
 
 ## Recommendations
-
-- Flag the revenue concentration in Coastal Clinic to operations leadership
-- Investigate whether the MSK03 underrepresentation reflects clinical patterns or a documentation gap
+- Coastal Clinic generates 58% of revenue. If capacity or staffing changes there, the business feels it immediately, worth modelling the impact of a volume drop before it happens.
+- If either of the top two physicians reduces activity or leaves, revenue drops significantly with no plan in place.
+- MSK03 runs at 24% of procedures vs 41% for MSK01, investigate whether that gap reflects clinical reality or a documentation pattern.
 
 
 ## Dashboard 
